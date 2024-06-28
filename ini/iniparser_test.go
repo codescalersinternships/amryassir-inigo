@@ -18,7 +18,7 @@ User = hg
 func TestGetSectionNames(t *testing.T) {
 	ini, _ := LoadFromString(StringInput)
 	got := ini.GetSectionNames()
-	want := []string {"DEFAULT", "forge.example"}
+	want := []string{"DEFAULT", "forge.example"}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("Got %q want %q", got, want)
@@ -31,7 +31,7 @@ func TestGetSections(t *testing.T) {
 	want := map[string]map[string]string{
 		"DEFAULT": {
 			"ServerAliveInterval": "45",
-			"Compression": "yes",
+			"Compression":         "yes",
 		},
 		"forge.example": {
 			"User": "hg",
@@ -56,8 +56,8 @@ func TestGet(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	iniData, _ := LoadFromString(StringInput)
-	
-	// Seting in Existing section 
+
+	// Seting in Existing section
 	iniData.Set("DEFAULT", "key1", "value1")
 	want := "value1"
 	got := iniData.Sections["DEFAULT"].Keys["key1"]
