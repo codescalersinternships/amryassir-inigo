@@ -57,7 +57,6 @@ err = ini.SaveToFile("NewFile.ini")
 if err != nil {
 	log.Fatalf("Failed to save INI data to file: %v", err)
 }
-
 ```
 
 # Testing
