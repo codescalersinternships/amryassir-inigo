@@ -4,7 +4,7 @@ A Go package for parsing, manipulating, and serializing INI files.
 
 ## Overview
 
-This package provides functionalities to parse INI files into a structured format, manipulate sections and keys, and serialize them back into INI format. It supports reading from files or strings, modifying section data, and saving to new INI files.
+This package provides functionalities to parse INI files into a structured format, manipulate sections and keys, and serialize them back into INI format. It supports reading from files or strings, modifying section data, and saving to new INI file.
 
 ## Features
 
