@@ -1,11 +1,13 @@
-package ini
+package pkg
 
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
+// StringInput is a sample INI configuration string
 const StringInput = `[DEFAULT]
 ServerAliveInterval = 45
 Compression = yes
@@ -56,36 +58,42 @@ func TestGet(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	iniData, _ := LoadFromString(StringInput)
-
-	// Seting in Existing section
-	iniData.Set("DEFAULT", "key1", "value1")
-	want := "value1"
-	got := iniData.Sections["DEFAULT"].Keys["key1"]
-	if got != want {
-		t.Errorf(" got %q, want %q", got, want)
-	}
-
-	// Setting in a new section
-	iniData.Set("NewSection", "key2", "value2")
-	want = "value2"
-	got = iniData.Sections["NewSection"].Keys["key2"]
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-
-	// Overwriting an existing key-value pair
-	iniData.Set("DEFAULT", "Compression", "no")
-	want = "no"
-	got = iniData.Sections["DEFAULT"].Keys["Compression"]
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
+	t.Run("Setting in existing section", func(t *testing.T) {
+		iniData.Set("DEFAULT", "key1", "value1")
+		want := "value1"
+		got := iniData.Sections["DEFAULT"].Keys["key1"]
+		if got != want {
+			t.Errorf(" got %q, want %q", got, want)
+		}
+	})
+	t.Run("Setting in new section", func(t *testing.T) {
+		iniData.Set("NewSection", "key2", "value2")
+		want := "value2"
+		got := iniData.Sections["NewSection"].Keys["key2"]
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+	t.Run("Overwriting existing key-value pair", func(t *testing.T) {
+		iniData.Set("DEFAULT", "Compression", "no")
+		want := "no"
+		got := iniData.Sections["DEFAULT"].Keys["Compression"]
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
 }
 
 func TestToString(t *testing.T) {
-	iniData, _ := LoadFromString(StringInput)
+	iniData, err := LoadFromString(StringInput)
+	if err != nil {
+		t.Fatalf("Failed to load data from input: %v", err)
+	}
 	got := iniData.ToString()
 	want := StringInput
+
+	got = strings.TrimSpace(got)
+	want = strings.TrimSpace(want)
 
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -113,15 +121,49 @@ func TestSaveToFile(t *testing.T) {
 }
 
 func TestLoadFromString(t *testing.T) {
-	_, err := LoadFromString(StringInput)
+	got, err := LoadFromString(StringInput)
 	if err != nil {
 		t.Fatalf("Failed to load data from input: %v", err)
+	}
+
+	want := &IniParser{
+		Sections: map[string]Section{
+			"DEFAULT": {
+				Name: "DEFAULT",
+				Keys: map[string]string{
+					"ServerAliveInterval": "45",
+					"Compression":         "yes",
+				},
+			},
+			"forge.example": {
+				Name: "forge.example",
+				Keys: map[string]string{
+					"User": "hg",
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
 	}
 }
 
 func TestLoadFromFile(t *testing.T) {
-	_, err := LoadFromFile("testdata/input.ini")
+	got, err := LoadFromFile("testdata/input.ini")
 	if err != nil {
 		t.Fatalf("Failed to load data from file: %v", err)
+	}
+	content, err := os.ReadFile("testdata/input.ini")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	want, err := LoadFromString(string(content))
+	if err != nil {
+		t.Fatalf("Failed to load expected data from string: %v", err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
 	}
 }

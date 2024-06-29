@@ -1,4 +1,4 @@
-package ini
+package pkg
 
 import (
 	"bufio"
@@ -8,11 +8,15 @@ import (
 	"strings"
 )
 
+// Section represents a section in an INI file.
+// Each section has a name and a collection of key-value pairs.
 type Section struct {
 	Name string
 	Keys map[string]string
 }
 
+// IniParser is a parser for INI files.
+// Stores all the sections and their corresponding key-value pairs.
 type IniParser struct {
 	Sections map[string]Section
 }
@@ -103,31 +107,6 @@ func (ini *IniParser) SaveToFile() error {
 	return nil
 }
 
-// parsing each line of an ini file or string
-func parseIniLine(ini *IniParser, currentSection *string, line string) {
-	line = strings.TrimSpace(line)
-	if len(line) == 0 || line[0] == '#' || line[0] == ';' {
-		return
-	}
-	if line[0] == '[' && line[len(line)-1] == ']' {
-		*currentSection = line[1 : len(line)-1]
-		ini.Sections[*currentSection] = Section{
-			Name: *currentSection,
-			Keys: make(map[string]string),
-		}
-	} else if *currentSection != "" {
-		pairs := strings.SplitN(line, "=", 2)
-		if len(pairs) < 2 {
-			return
-		}
-		key := strings.TrimSpace(pairs[0])
-		value := strings.TrimSpace(pairs[1])
-		section := ini.Sections[*currentSection]
-		section.Keys[key] = value
-		ini.Sections[*currentSection] = section
-	}
-}
-
 // Load data from an input string
 func LoadFromString(input string) (*IniParser, error) {
 	ini := &IniParser{
@@ -174,4 +153,29 @@ func LoadFromFile(fileName string) (*IniParser, error) {
 		parseIniLine(ini, &currentSection, line)
 	}
 	return ini, nil
+}
+
+// parsing each line of an ini file or string
+func parseIniLine(ini *IniParser, currentSection *string, line string) {
+	line = strings.TrimSpace(line)
+	if len(line) == 0 || line[0] == '#' || line[0] == ';' {
+		return
+	}
+	if line[0] == '[' && line[len(line)-1] == ']' {
+		*currentSection = line[1 : len(line)-1]
+		ini.Sections[*currentSection] = Section{
+			Name: *currentSection,
+			Keys: make(map[string]string),
+		}
+	} else if *currentSection != "" {
+		pairs := strings.SplitN(line, "=", 2)
+		if len(pairs) < 2 {
+			return
+		}
+		key := strings.TrimSpace(pairs[0])
+		value := strings.TrimSpace(pairs[1])
+		section := ini.Sections[*currentSection]
+		section.Keys[key] = value
+		ini.Sections[*currentSection] = section
+	}
 }
