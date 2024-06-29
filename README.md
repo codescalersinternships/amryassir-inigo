@@ -21,7 +21,7 @@ go get github.com/codescalersinternships/amryassir-inigo
 ```
 ## Usage
 
-```Golang
+```Go
 # Load data from a string
 ini, err := pkg.LoadFromString(sample String)
 if err != nil {
