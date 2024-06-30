@@ -84,12 +84,12 @@ func TestSet(t *testing.T) {
 	})
 }
 
-func TestToString(t *testing.T) {
+func TestString(t *testing.T) {
 	iniData, err := LoadFromString(StringInput)
 	if err != nil {
 		t.Fatalf("Failed to load data from input: %v", err)
 	}
-	got := iniData.ToString()
+	got := iniData.String()
 	want := StringInput
 
 	got = strings.TrimSpace(got)

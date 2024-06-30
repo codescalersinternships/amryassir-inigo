@@ -3,6 +3,7 @@ package pkg
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -72,17 +73,16 @@ func (ini *IniParser) Set(sectionName, key, value string) {
 }
 
 // Converts the ini file to string
-func (ini *IniParser) ToString() string {
-	var sb strings.Builder
-
+func (ini *IniParser) String() string {
+	result := ""
 	for sectionName, section := range ini.Sections {
-		sb.WriteString("[" + sectionName + "]\n")
+		result += fmt.Sprintf("[%v]\n", sectionName)
 		for key, value := range section.Keys {
-			sb.WriteString(key + " = " + value + "\n")
+			result += fmt.Sprintf("%v = %v\n", key, value)
 		}
-		sb.WriteString("\n")
+		result += "\n"
 	}
-	return sb.String()
+	return result
 }
 
 // Saves data to a new file
@@ -94,7 +94,7 @@ func (ini *IniParser) SaveToFile() error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	_, err = w.WriteString(ini.ToString())
+	_, err = w.WriteString(ini.String())
 	if err != nil {
 		return err
 	}
