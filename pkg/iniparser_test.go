@@ -61,7 +61,7 @@ func TestSet(t *testing.T) {
 	t.Run("Setting in existing section", func(t *testing.T) {
 		iniData.Set("DEFAULT", "key1", "value1")
 		want := "value1"
-		got := iniData.Sections["DEFAULT"].Keys["key1"]
+		got := iniData.sections["DEFAULT"].Keys["key1"]
 		if got != want {
 			t.Errorf(" got %q, want %q", got, want)
 		}
@@ -69,7 +69,7 @@ func TestSet(t *testing.T) {
 	t.Run("Setting in new section", func(t *testing.T) {
 		iniData.Set("NewSection", "key2", "value2")
 		want := "value2"
-		got := iniData.Sections["NewSection"].Keys["key2"]
+		got := iniData.sections["NewSection"].Keys["key2"]
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}
@@ -77,7 +77,7 @@ func TestSet(t *testing.T) {
 	t.Run("Overwriting existing key-value pair", func(t *testing.T) {
 		iniData.Set("DEFAULT", "Compression", "no")
 		want := "no"
-		got := iniData.Sections["DEFAULT"].Keys["Compression"]
+		got := iniData.sections["DEFAULT"].Keys["Compression"]
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}
@@ -127,16 +127,14 @@ func TestLoadFromString(t *testing.T) {
 	}
 
 	want := &IniParser{
-		Sections: map[string]Section{
+		sections: map[string]Section{
 			"DEFAULT": {
-				Name: "DEFAULT",
 				Keys: map[string]string{
 					"ServerAliveInterval": "45",
 					"Compression":         "yes",
 				},
 			},
 			"forge.example": {
-				Name: "forge.example",
 				Keys: map[string]string{
 					"User": "hg",
 				},

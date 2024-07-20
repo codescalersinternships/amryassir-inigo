@@ -6,13 +6,15 @@ on:
   push:
     branches:
       - development
+      - main
   pull_request:
     branches:
       - development
+      - main
 
 jobs:
 
-  test_pull_request:
+  Check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

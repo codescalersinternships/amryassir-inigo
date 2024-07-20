@@ -12,20 +12,19 @@ import (
 // Section represents a section in an INI file.
 // Each section has a name and a collection of key-value pairs.
 type Section struct {
-	Name string
 	Keys map[string]string
 }
 
 // IniParser is a parser for INI files.
 // Stores all the sections and their corresponding key-value pairs.
 type IniParser struct {
-	Sections map[string]Section
+	sections map[string]Section
 }
 
 // List of all section names.
 func (ini *IniParser) GetSectionNames() []string {
 	var sectionNames []string
-	for sectionName := range ini.Sections {
+	for sectionName := range ini.sections {
 		sectionNames = append(sectionNames, sectionName)
 	}
 	return sectionNames
@@ -34,7 +33,7 @@ func (ini *IniParser) GetSectionNames() []string {
 // Serialize convert into a dictionary/map { section_name: {key1: val1, key2, val2} ...}.
 func (ini *IniParser) GetSections() map[string]map[string]string {
 	sections := make(map[string]map[string]string)
-	for sectionName, section := range ini.Sections {
+	for sectionName, section := range ini.sections {
 		sectionMap := make(map[string]string)
 		for key, value := range section.Keys {
 			sectionMap[key] = value
@@ -46,7 +45,7 @@ func (ini *IniParser) GetSections() map[string]map[string]string {
 
 // Gets the value of key key in section section_name.
 func (ini *IniParser) Get(sectionName, key string) (string, error) {
-	section, exists := ini.Sections[sectionName]
+	section, exists := ini.sections[sectionName]
 	if !exists {
 		return "", errors.New("section does not exist")
 	}
@@ -61,56 +60,44 @@ func (ini *IniParser) Get(sectionName, key string) (string, error) {
 
 // Sets a key in section section_name to value value.
 func (ini *IniParser) Set(sectionName, key, value string) {
-	section, exists := ini.Sections[sectionName]
+	section, exists := ini.sections[sectionName]
 	if !exists {
 		section = Section{
-			Name: sectionName,
 			Keys: make(map[string]string),
 		}
-		ini.Sections[sectionName] = section
+		ini.sections[sectionName] = section
 	}
 	section.Keys[key] = value
+	ini.sections[sectionName] = section
 }
 
 // Converts the ini file to string
 func (ini *IniParser) String() string {
-	result := ""
-	for sectionName, section := range ini.Sections {
-		result += fmt.Sprintf("[%v]\n", sectionName)
+	var result strings.Builder
+	for sectionName, section := range ini.sections {
+		result.WriteString(fmt.Sprintf("[%v]\n", sectionName))
 		for key, value := range section.Keys {
-			result += fmt.Sprintf("%v = %v\n", key, value)
+			result.WriteString(fmt.Sprintf("%v = %v\n", key, value))
 		}
-		result += "\n"
+		result.WriteString("\n")
 	}
-	return result
+	return result.String()
 }
 
 // Saves data to a new file
 func (ini *IniParser) SaveToFile() error {
-	f, err := os.Create("NewFile.ini")
+	d1 := []byte(ini.String())
+	err := os.WriteFile("NewFile.ini", d1, 0644)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-
-	w := bufio.NewWriter(f)
-	_, err = w.WriteString(ini.String())
-	if err != nil {
-		return err
-	}
-
-	err = w.Flush()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // Load data from an input string
 func LoadFromString(input string) (*IniParser, error) {
 	ini := &IniParser{
-		Sections: make(map[string]Section),
+		sections: make(map[string]Section),
 	}
 	reader := bufio.NewReader(strings.NewReader(input))
 	var currentSection string
@@ -123,59 +110,44 @@ func LoadFromString(input string) (*IniParser, error) {
 			}
 			return nil, err
 		}
-		parseIniLine(ini, &currentSection, line)
+		ini.parseIniLine(&currentSection, line)
 	}
 	return ini, nil
 }
 
 // Loads data from ini file
 func LoadFromFile(fileName string) (*IniParser, error) {
-	file, err := os.Open(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	ini := &IniParser{
-		Sections: make(map[string]Section),
-	}
-	reader := bufio.NewReader(file)
-	var currentSection string
-
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		parseIniLine(ini, &currentSection, line)
-	}
-	return ini, nil
+	return LoadFromString(string(content))
 }
 
 // parsing each line of an ini file or string
-func parseIniLine(ini *IniParser, currentSection *string, line string) {
+func (ini *IniParser) parseIniLine(currentSection *string, line string) error {
 	line = strings.TrimSpace(line)
 	if len(line) == 0 || line[0] == '#' || line[0] == ';' {
-		return
+		return nil
 	}
 	if line[0] == '[' && line[len(line)-1] == ']' {
 		*currentSection = line[1 : len(line)-1]
-		ini.Sections[*currentSection] = Section{
-			Name: *currentSection,
+		ini.sections[*currentSection] = Section{
 			Keys: make(map[string]string),
 		}
 	} else if *currentSection != "" {
 		pairs := strings.SplitN(line, "=", 2)
 		if len(pairs) < 2 {
-			return
+			return fmt.Errorf("invalid key-value pair: %s", line)
 		}
 		key := strings.TrimSpace(pairs[0])
 		value := strings.TrimSpace(pairs[1])
-		section := ini.Sections[*currentSection]
+		section := ini.sections[*currentSection]
 		section.Keys[key] = value
-		ini.Sections[*currentSection] = section
+		ini.sections[*currentSection] = section
+	} else {
+		return fmt.Errorf("line does not belong to any section: %s", line)
 	}
+	return nil
 }
