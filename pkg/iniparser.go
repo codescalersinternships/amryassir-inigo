@@ -110,7 +110,9 @@ func LoadFromString(input string) (*IniParser, error) {
 			}
 			return nil, err
 		}
-		ini.parseIniLine(&currentSection, line)
+		if err := ini.parseIniLine(&currentSection, line); err != nil {
+			return nil, err
+		}
 	}
 	return ini, nil
 }
